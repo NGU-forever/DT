@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0",
+  "description": "220kV 智能变电站数字孪生物模型 (Thing Model) 配置。设备类型 -> 测点模板 -> 实例绑定，新增设备无需修改代码。",
+  "station": {
+    "id": "substation-220kv-fengqiao",
+    "name": "国家电网 · 220kV 枫桥智能变电站",
+    "voltage_level": "220kV / 110kV / 35kV",
+    "voltage_hv_kv": 224.5,
+    "voltage_mv_kv": 114.8,
+    "frequency_hz": 50.0,
+    "ambient_temp_c": 24.8,
+    "power_factor": 0.975,
+    "grid_sources": ["gis-201"],
+    "buses": {
+      "220kV-I": { "rated_kv": 220, "label": "220kV I 段母线" },
+      "220kV-II": { "rated_kv": 220, "label": "220kV II 段母线" },
+      "110kV": { "rated_kv": 110, "label": "110kV 母线" }
+    },
+    "demand": {
+      "base_mva": 365.3,
+      "band_mva": 2.4,
+      "mv_share": 0.37
+    },
+    "simulation": {
+      "step_seconds": 1.5,
+      "time_compression": 300.0,
+      "db_persist_every_steps": 10
+    }
+  },
+  "device_types": {
+    "transformer": {
+      "label": "电力变压器",
+      "measurements": [
+        { "key": "oil_temp", "label": "顶层油温", "unit": "℃", "precision": 1, "alarm": { "warning": 75, "danger": 85 } },
+        { "key": "winding_temp", "label": "绕组热点温度", "unit": "℃", "precision": 1, "alarm": { "warning": 95, "danger": 105 } },
+        { "key": "current", "label": "高压侧电流", "unit": "A", "precision": 1, "alarm": { "warning": 560, "danger": 630 } },
+        { "key": "load_rate", "label": "负载率", "unit": "%", "precision": 1, "alarm": { "warning": 90, "danger": 110 } },
+        { "key": "voltage", "label": "运行电压", "unit": "kV", "precision": 1 },
+        { "key": "vibration", "label": "振动", "unit": "mm/s", "precision": 2, "alarm": { "warning": 3.0, "danger": 5.0 } },
+        { "key": "pd_level", "label": "局部放电", "unit": "pC", "precision": 1, "alarm": { "warning": 80, "danger": 150 } },
+        { "key": "gas_h2", "label": "油中溶解 H2", "unit": "ppm", "precision": 1, "alarm": { "warning": 100, "danger": 150 } },
+        { "key": "cooler_ratio", "label": "冷却器可用率", "unit": "", "precision": 2, "alarm": { "warning": 0.9, "danger": 0.3, "direction": "low" } }
+      ],
+      "opcua": [
+        { "key": "oil_temp", "node": "OilTemperature", "variant": "Float" },
+        { "key": "winding_temp", "node": "WindingTemperature", "variant": "Float" },
+        { "key": "current", "node": "HighVoltageCurrent", "variant": "Float" },
+        { "key": "load_rate", "node": "LoadRate", "variant": "Float" }
+      ],
+      "physics": {
+        "model": "iec60076-7-first-order",
+        "loss_ratio_r": 6.0,
+        "oil_exponent_x": 0.9,
+        "winding_exponent_y": 1.6,
+        "top_oil_rise_rated_k": 50.0,
+        "hot_spot_gradient_rated_k": 16.0,
+        "tau_oil_real_s": 9000.0,
+        "tau_winding_real_s": 600.0
+      }
+    },
+    "breaker": {
+      "label": "GIS 组合电器断路器",
+      "measurements": [
+        { "key": "current", "label": "线路电流", "unit": "A", "precision": 1, "alarm": { "warning": 2800, "danger": 3400 } },
+        { "key": "voltage", "label": "运行电压", "unit": "kV", "precision": 1 },
+        { "key": "sf6_pressure", "label": "SF6 气压", "unit": "MPa", "precision": 3, "alarm": { "warning": 0.5, "danger": 0.45, "direction": "low" } },
+        { "key": "sf6_moisture", "label": "SF6 微水", "unit": "ppm", "precision": 1, "alarm": { "warning": 150, "danger": 300 } },
+        { "key": "contact_wear", "label": "电寿命磨损", "unit": "%", "precision": 1, "alarm": { "warning": 80, "danger": 95 } },
+        { "key": "action_count", "label": "动作次数", "unit": "次", "precision": 0 }
+      ],
+      "opcua": [
+        { "key": "breaker_state", "node": "BreakerPosition", "variant": "Boolean", "writable": true },
+        { "key": "sf6_pressure", "node": "SF6GasPressure", "variant": "Float" },
+        { "key": "current", "node": "LineCurrent", "variant": "Float" }
+      ],
+      "physics": {
+        "sf6_rated_pressure_mpa": 0.6,
+        "sf6_lockout_pressure_mpa": 0.45
+      }
+    }
+  },
+  "devices": [
+    {
+      "id": "trans-1",
+      "type": "transformer",
+      "name": "1# 主变压器 (220kV/110kV/35kV)",
+      "model": "SFPZ-240000/220",
+      "voltage_level": "220kV",
+      "rated_capacity": "240 MVA",
+      "topology": { "hv_bus": "220kV-I", "lv_bus": "110kV" },
+      "physics": { "rated_capacity_mva": 240.0, "cooling_banks": 6 },
+      "initial": {
+        "oil_temp": 58.2,
+        "winding_temp": 68.5,
+        "current": 469.8,
+        "load_rate": 76.1,
+        "voltage": 224.5,
+        "vibration": 1.15,
+        "pd_level": 35.0,
+        "gas_h2": 12.4,
+        "cooler_ratio": 1.0,
+        "cooler_banks_running": 6
+      }
+    },
+    {
+      "id": "trans-2",
+      "type": "transformer",
+      "name": "2# 主变压器 (220kV/110kV/35kV)",
+      "model": "SFPZ-240000/220",
+      "voltage_level": "220kV",
+      "rated_capacity": "240 MVA",
+      "topology": { "hv_bus": "220kV-II", "lv_bus": "110kV" },
+      "physics": {
+        "rated_capacity_mva": 240.0,
+        "cooling_banks": 6,
+        "top_oil_rise_rated_k": 46.0,
+        "hot_spot_gradient_rated_k": 15.6
+      },
+      "initial": {
+        "oil_temp": 55.6,
+        "winding_temp": 65.8,
+        "current": 469.8,
+        "load_rate": 76.1,
+        "voltage": 224.2,
+        "vibration": 0.98,
+        "pd_level": 28.0,
+        "gas_h2": 10.1,
+        "cooler_ratio": 1.0,
+        "cooler_banks_running": 6
+      }
+    },
+    {
+      "id": "gis-201",
+      "type": "breaker",
+      "name": "220kV GIS 201 进线断路器",
+      "model": "ZF12-252/T4000-50",
+      "voltage_level": "220kV",
+      "rated_capacity": "4000A / 50kA",
+      "topology": { "role": "incoming", "from": "GRID", "to": "220kV-I" },
+      "physics": { "rated_current_a": 4000.0, "protection_pickup_a": 4800.0, "protection_delay_steps": 3 },
+      "initial": {
+        "breaker_state": true,
+        "current": 939.5,
+        "voltage": 224.5,
+        "sf6_pressure": 0.58,
+        "sf6_moisture": 42.0,
+        "contact_wear": 4.2,
+        "action_count": 148
+      }
+    },
+    {
+      "id": "gis-202",
+      "type": "breaker",
+      "name": "220kV GIS 202 母联断路器",
+      "model": "ZF12-252/T4000-50",
+      "voltage_level": "220kV",
+      "rated_capacity": "4000A / 50kA",
+      "topology": { "role": "bus_tie", "from": "220kV-I", "to": "220kV-II" },
+      "physics": { "rated_current_a": 4000.0, "protection_pickup_a": 4800.0, "protection_delay_steps": 3 },
+      "initial": {
+        "breaker_state": true,
+        "current": 469.8,
+        "voltage": 224.3,
+        "sf6_pressure": 0.57,
+        "sf6_moisture": 38.0,
+        "contact_wear": 3.8,
+        "action_count": 112
+      }
+    },
+    {
+      "id": "gis-101",
+      "type": "breaker",
+      "name": "110kV GIS 101 出线断路器",
+      "model": "ZF11-126/T3150-40",
+      "voltage_level": "110kV",
+      "rated_capacity": "3150A / 40kA",
+      "topology": { "role": "outgoing", "from": "110kV", "to": "LOAD-110kV", "load_share": 0.37 },
+      "physics": { "rated_current_a": 3150.0, "protection_pickup_a": 1000.0, "protection_delay_steps": 3 },
+      "initial": {
+        "breaker_state": true,
+        "current": 680.1,
+        "voltage": 114.8,
+        "sf6_pressure": 0.52,
+        "sf6_moisture": 35.0,
+        "contact_wear": 6.1,
+        "action_count": 220
+      }
+    }
+  ]
+}
